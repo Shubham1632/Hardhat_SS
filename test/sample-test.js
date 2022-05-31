@@ -1,19 +1,25 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+const { inputToConfig } = require("@ethereum-waffle/compiler");
+const { mocha, ethers } = require("hardhat");
+const { expect, assert } = require("chai");
 
-describe("Greeter", function () {
-  it("Should return the new greeting once it's changed", async function () {
-    const Greeter = await ethers.getContractFactory("Greeter");
-    const greeter = await Greeter.deploy("Hello, world!");
-    await greeter.deployed();
+describe("SimpleStorage", function () {
+  let ContractFactory;
+  let contract;
+  beforeEach(async function () {
+    ContractFactory = await ethers.getContractFactory("SimpleStorage");
+    contract = await ContractFactory.deploy();
+  });
+  it("Should Start with favorite number as zero", async function () {
+    const currentvalue = await contract.retrieve();
+    const expectedvalue = "0";
+    assert.equal(currentvalue.toString(), expectedvalue);
+  });
+  it("Should update the value after calling store", async function () {
+    const check = "7";
+    const TransactionResponce = await contract.store(check);
+    await TransactionResponce.wait(1);
 
-    expect(await greeter.greet()).to.equal("Hello, world!");
-
-    const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
-
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
-
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
+    const favInt = await contract.retrieve();
+    assert.equal(favInt.toString(), check);
   });
 });
